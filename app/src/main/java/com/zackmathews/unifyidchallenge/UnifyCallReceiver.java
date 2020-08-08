@@ -7,13 +7,15 @@ import java.util.Date;
 
 public class UnifyCallReceiver extends PhoneCallReceiver {
     private static int ACTIVE_CALLS = 0;
-    private SensorDataRepo repo;
+    //todo fix static context
+    private static SensorDataRepo repo;
+
     @Override
     protected void onIncomingCallReceived(Context context, Date start) {
         ACTIVE_CALLS++;
         Log.d(getClass().getSimpleName(), "onIncomingCallReceived");
         Log.d(getClass().getSimpleName(), String.format("Active calls: %d", ACTIVE_CALLS));
-        if(repo == null) {
+        if (repo == null) {
             repo = new SensorDataRepo(context);
         }
         repo.startSensorCapture();
@@ -24,7 +26,7 @@ public class UnifyCallReceiver extends PhoneCallReceiver {
         ACTIVE_CALLS--;
         Log.d(getClass().getSimpleName(), "onIncomingCallAnswered");
         Log.d(getClass().getSimpleName(), String.format("Active calls: %d", ACTIVE_CALLS));
-        if(repo != null && ACTIVE_CALLS == 0){
+        if (repo != null && ACTIVE_CALLS == 0) {
             repo.stopSensorCapture();
             repo = null;
         }
@@ -35,7 +37,7 @@ public class UnifyCallReceiver extends PhoneCallReceiver {
         ACTIVE_CALLS--;
         Log.d(getClass().getSimpleName(), "onIncomingCallEnded");
         Log.d(getClass().getSimpleName(), String.format("Active calls: %d", ACTIVE_CALLS));
-        if(repo != null && ACTIVE_CALLS == 0){
+        if (repo != null && ACTIVE_CALLS == 0) {
             repo.stopSensorCapture();
             repo = null;
         }

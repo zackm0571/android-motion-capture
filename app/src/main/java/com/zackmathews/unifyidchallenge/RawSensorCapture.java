@@ -6,8 +6,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import com.zackmatthews.unifyidchallenge.proto.UnifyChallengeProto.SensorData.SensorType;
-
 import java.util.Date;
 import java.util.HashMap;
 
@@ -17,8 +15,8 @@ import io.reactivex.rxjava3.subjects.Subject;
 
 public class RawSensorCapture implements SensorEventListener {
     class SensorDataPacket {
-        public SensorType sensorType;
-        public float[] values;
+        public String sensorType;
+        public Float[] values;
         public Date date;
     }
 
@@ -27,11 +25,10 @@ public class RawSensorCapture implements SensorEventListener {
     private SensorManager sensorManager;
     private HashMap<Integer, Sensor> sensorMap = new HashMap<>();
 
-
     public Subject<SensorDataPacket> beginCapture() {
         for (HashMap.Entry<Integer, Sensor> entry : sensorMap.entrySet()) {
             Sensor s = entry.getValue();
-            sensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_FASTEST, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
         }
         packetObservable = BehaviorSubject.create();
         return packetObservable;
@@ -46,14 +43,12 @@ public class RawSensorCapture implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         SensorDataPacket packet = new SensorDataPacket();
         packet.date = new Date(System.currentTimeMillis());
-        packet.values = new float[event.values.length];
-        System.arraycopy(event.values, 0, packet.values,
-                0, event.values.length);
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            packet.sensorType = SensorType.ACCELEROMETER;
-        } else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-            packet.sensorType = SensorType.ROTATION_VECTOR;
+        packet.values = new Float[event.values.length];
+        // Protobuf and Arrays.asList needs this to be Float vs float
+        for(int i = 0; i < event.values.length; i++){
+            packet.values[i] = event.values[i];
         }
+        packet.sensorType = event.sensor.getName();
         packetObservable.onNext(packet);
     }
 
@@ -64,7 +59,7 @@ public class RawSensorCapture implements SensorEventListener {
 
     public static class Builder {
         private Context context;
-        private boolean enableRotation, enableAccel;
+        private boolean enableRotation, enableAccel, enableGyroscope;
         private HashMap<Integer, Sensor> sensorMap = new HashMap<>();
         private SensorManager sensorManager;
 
@@ -81,6 +76,11 @@ public class RawSensorCapture implements SensorEventListener {
 
         public Builder enableAccelerometerSensor() {
             enableAccel = true;
+            return this;
+        }
+
+        public Builder enableGyroscopeSensor(){
+            enableGyroscope = true;
             return this;
         }
 
@@ -102,6 +102,13 @@ public class RawSensorCapture implements SensorEventListener {
                 if (accelerometerSensor == null)
                     throw new IllegalStateException("Couldn't instantiate the accelerometer sensor. Check your device.");
                 sensorMap.put(Sensor.TYPE_ACCELEROMETER, accelerometerSensor);
+            }
+
+            if (enableGyroscope) {
+                Sensor gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                if (gyroscopeSensor == null)
+                    throw new IllegalStateException("Couldn't instantiate the accelerometer sensor. Check your device.");
+                sensorMap.put(Sensor.TYPE_GYROSCOPE, gyroscopeSensor);
             }
             RawSensorCapture rawSensorCapture = new RawSensorCapture();
             rawSensorCapture.context = context;

@@ -38,6 +38,7 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
     protected abstract void onIncomingCallEnded(Context context, Date start, Date end);
 
     public void onCallStateChanged(Context context, int state) {
+        Date now = new Date(System.currentTimeMillis());
         if (lastState == state) {
             //No change in state
             Log.d(getClass().getSimpleName(), "No change in call state, breaking");
@@ -46,18 +47,20 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:
                 isIncoming = true;
-                callStartTime = new Date();
+                callStartTime = now;
                 onIncomingCallReceived(context, callStartTime);
                 Log.d(getClass().getSimpleName(), "Incoming call received");
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
                 if (lastState != TelephonyManager.CALL_STATE_RINGING) {
+                    Log.d(getClass().getSimpleName(), "Outgoing call initiated");
                     isIncoming = false;
-                    callStartTime = new Date();
-                    onIncomingCallReceived(context, new Date());
+                    callStartTime = now;
+                    // test as I don't have another phone to call myself with
+                    onIncomingCallReceived(context, callStartTime);
                 } else {
                     isIncoming = true;
-                    callStartTime = new Date();
+                    callStartTime = now;
                     onIncomingCallAnswered(context, callStartTime);
                     Log.d(getClass().getSimpleName(), "Incoming call answered");
                 }
@@ -67,11 +70,12 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
                 if (lastState == TelephonyManager.CALL_STATE_RINGING) {
                     Log.d(getClass().getSimpleName(), "Missed call");
                 } else if (isIncoming) {
-                    onIncomingCallEnded(context, callStartTime, new Date());
+                    onIncomingCallEnded(context, callStartTime, now);
                     Log.d(getClass().getSimpleName(), "Incoming call ended");
                 } else {
-                    onIncomingCallEnded(context, callStartTime, new Date());
                     Log.d(getClass().getSimpleName(), "Outgoing call ended");
+                    // test as I don't have another phone to call myself with
+                    onIncomingCallEnded(context, callStartTime, now);
                 }
                 break;
         }

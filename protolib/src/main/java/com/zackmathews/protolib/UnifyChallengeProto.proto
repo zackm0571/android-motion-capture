@@ -7,12 +7,11 @@ option java_outer_classname = "UnifyChallengeProto";
 
 message SensorData {
 
-  enum SensorType {
-    ACCELEROMETER = 1;
-    ROTATION_VECTOR = 11;
-  }
-  required SensorType sensorType = 1;
-  repeated float accelerometerReading = 2;
-  repeated float rotationVectorReading = 3;
+  required string sensorType = 1;
+  repeated float sensorValues = 2;
+}
+
+message SensorDataCollection{
+  repeated SensorData sensorData = 3;
 }
 
