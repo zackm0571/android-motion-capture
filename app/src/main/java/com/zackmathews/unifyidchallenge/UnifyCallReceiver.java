@@ -3,15 +3,13 @@ package com.zackmathews.unifyidchallenge;
 import android.content.Context;
 import android.util.Log;
 
-import java.util.Date;
-
 public class UnifyCallReceiver extends PhoneCallReceiver {
     private static int ACTIVE_CALLS = 0;
     //todo fix static context
     private static SensorDataRepo repo;
 
     @Override
-    protected void onIncomingCallReceived(Context context, Date start) {
+    protected void onIncomingCallReceived(Context context) {
         ACTIVE_CALLS++;
         Log.d(getClass().getSimpleName(), "onIncomingCallReceived");
         Log.d(getClass().getSimpleName(), String.format("Active calls: %d", ACTIVE_CALLS));
@@ -22,7 +20,7 @@ public class UnifyCallReceiver extends PhoneCallReceiver {
     }
 
     @Override
-    protected void onIncomingCallAnswered(Context context, Date start) {
+    protected void onIncomingCallAnswered(Context context) {
         ACTIVE_CALLS--;
         Log.d(getClass().getSimpleName(), "onIncomingCallAnswered");
         Log.d(getClass().getSimpleName(), String.format("Active calls: %d", ACTIVE_CALLS));
@@ -33,7 +31,7 @@ public class UnifyCallReceiver extends PhoneCallReceiver {
     }
 
     @Override
-    protected void onIncomingCallEnded(Context context, Date start, Date end) {
+    protected void onIncomingCallEnded(Context context) {
         ACTIVE_CALLS--;
         Log.d(getClass().getSimpleName(), "onIncomingCallEnded");
         Log.d(getClass().getSimpleName(), String.format("Active calls: %d", ACTIVE_CALLS));

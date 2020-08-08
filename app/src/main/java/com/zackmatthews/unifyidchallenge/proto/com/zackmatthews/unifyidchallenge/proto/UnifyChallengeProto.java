@@ -44,6 +44,15 @@ public final class UnifyChallengeProto {
      * <code>repeated float sensorValues = 2;</code>
      */
     float getSensorValues(int index);
+
+    /**
+     * <code>required uint64 timestamp = 4;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <code>required uint64 timestamp = 4;</code>
+     */
+    long getTimestamp();
   }
   /**
    * Protobuf type {@code unifyidchallenge.SensorData}
@@ -59,6 +68,7 @@ public final class UnifyChallengeProto {
     private SensorData() {
       sensorType_ = "";
       sensorValues_ = java.util.Collections.emptyList();
+      timestamp_ = 0L;
     }
 
     @java.lang.Override
@@ -114,6 +124,11 @@ public final class UnifyChallengeProto {
                 sensorValues_.add(input.readFloat());
               }
               input.popLimit(limit);
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000002;
+              timestamp_ = input.readUInt64();
               break;
             }
           }
@@ -208,6 +223,21 @@ public final class UnifyChallengeProto {
       return sensorValues_.get(index);
     }
 
+    public static final int TIMESTAMP_FIELD_NUMBER = 4;
+    private long timestamp_;
+    /**
+     * <code>required uint64 timestamp = 4;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required uint64 timestamp = 4;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -215,6 +245,10 @@ public final class UnifyChallengeProto {
       if (isInitialized == 0) return false;
 
       if (!hasSensorType()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTimestamp()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -229,6 +263,9 @@ public final class UnifyChallengeProto {
       }
       for (int i = 0; i < sensorValues_.size(); i++) {
         output.writeFloat(2, sensorValues_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeUInt64(4, timestamp_);
       }
       unknownFields.writeTo(output);
     }
@@ -246,6 +283,10 @@ public final class UnifyChallengeProto {
         dataSize = 4 * getSensorValuesList().size();
         size += dataSize;
         size += 1 * getSensorValuesList().size();
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(4, timestamp_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -271,6 +312,11 @@ public final class UnifyChallengeProto {
       }
       result = result && getSensorValuesList()
           .equals(other.getSensorValuesList());
+      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp()) {
+        result = result && (getTimestamp()
+            == other.getTimestamp());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -289,6 +335,11 @@ public final class UnifyChallengeProto {
       if (getSensorValuesCount() > 0) {
         hash = (37 * hash) + SENSORVALUES_FIELD_NUMBER;
         hash = (53 * hash) + getSensorValuesList().hashCode();
+      }
+      if (hasTimestamp()) {
+        hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTimestamp());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -412,6 +463,8 @@ public final class UnifyChallengeProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         sensorValues_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -445,6 +498,10 @@ public final class UnifyChallengeProto {
           bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.sensorValues_ = sensorValues_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.timestamp_ = timestamp_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -502,6 +559,9 @@ public final class UnifyChallengeProto {
           }
           onChanged();
         }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -509,6 +569,9 @@ public final class UnifyChallengeProto {
 
       public final boolean isInitialized() {
         if (!hasSensorType()) {
+          return false;
+        }
+        if (!hasTimestamp()) {
           return false;
         }
         return true;
@@ -671,6 +734,38 @@ public final class UnifyChallengeProto {
       public Builder clearSensorValues() {
         sensorValues_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+
+      private long timestamp_ ;
+      /**
+       * <code>required uint64 timestamp = 4;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required uint64 timestamp = 4;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <code>required uint64 timestamp = 4;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000004;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 timestamp = 4;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timestamp_ = 0L;
         onChanged();
         return this;
       }
@@ -1498,12 +1593,12 @@ public final class UnifyChallengeProto {
     java.lang.String[] descriptorData = {
       "\nIprotolib/src/main/java/com/zackmathews" +
       "/protolib/UnifyChallengeProto.proto\022\020uni" +
-      "fyidchallenge\"6\n\nSensorData\022\022\n\nsensorTyp" +
-      "e\030\001 \002(\t\022\024\n\014sensorValues\030\002 \003(\002\"H\n\024SensorD" +
-      "ataCollection\0220\n\nsensorData\030\003 \003(\0132\034.unif" +
-      "yidchallenge.SensorDataB>\n\'com.zackmatth" +
-      "ews.unifyidchallenge.protoB\023UnifyChallen" +
-      "geProto"
+      "fyidchallenge\"I\n\nSensorData\022\022\n\nsensorTyp" +
+      "e\030\001 \002(\t\022\024\n\014sensorValues\030\002 \003(\002\022\021\n\ttimesta" +
+      "mp\030\004 \002(\004\"H\n\024SensorDataCollection\0220\n\nsens" +
+      "orData\030\003 \003(\0132\034.unifyidchallenge.SensorDa" +
+      "taB>\n\'com.zackmatthews.unifyidchallenge." +
+      "protoB\023UnifyChallengeProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1522,7 +1617,7 @@ public final class UnifyChallengeProto {
     internal_static_unifyidchallenge_SensorData_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_unifyidchallenge_SensorData_descriptor,
-        new java.lang.String[] { "SensorType", "SensorValues", });
+        new java.lang.String[] { "SensorType", "SensorValues", "Timestamp", });
     internal_static_unifyidchallenge_SensorDataCollection_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_unifyidchallenge_SensorDataCollection_fieldAccessorTable = new

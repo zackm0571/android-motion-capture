@@ -9,6 +9,7 @@ message SensorData {
 
   required string sensorType = 1;
   repeated float sensorValues = 2;
+  required uint64 timestamp = 4;
 }
 
 message SensorDataCollection{

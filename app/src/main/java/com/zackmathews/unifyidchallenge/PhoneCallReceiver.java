@@ -6,13 +6,11 @@ import android.content.Intent;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import java.util.Date;
 /**
  * Base BroadcastReceiver for handling call state.
  */
 public abstract class PhoneCallReceiver extends BroadcastReceiver {
     private static int lastState = TelephonyManager.CALL_STATE_IDLE;
-    private static Date callStartTime;
     private static boolean isIncoming;
 
     @Override
@@ -31,14 +29,34 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         }
     }
 
-    protected abstract void onIncomingCallReceived(Context context, Date start);
+    /**
+     * Notifies consumers of an incoming call.
+     *
+     * @param context
+     */
+    protected abstract void onIncomingCallReceived(Context context);
 
-    protected abstract void onIncomingCallAnswered(Context context, Date start);
+    /**
+     * Notifies consumers that an incoming call has been answered.
+     *
+     * @param context
+     */
+    protected abstract void onIncomingCallAnswered(Context context);
 
-    protected abstract void onIncomingCallEnded(Context context, Date start, Date end);
+    /**
+     * Notifies consumers that an incoming call has ended.
+     *
+     * @param context
+     */
+    protected abstract void onIncomingCallEnded(Context context);
 
+    /**
+     * Handles state change and invokes appropriate callback.
+     *
+     * @param context
+     * @param state
+     */
     public void onCallStateChanged(Context context, int state) {
-        Date now = new Date(System.currentTimeMillis());
         if (lastState == state) {
             //No change in state
             Log.d(getClass().getSimpleName(), "No change in call state, breaking");
@@ -47,21 +65,18 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
         switch (state) {
             case TelephonyManager.CALL_STATE_RINGING:
                 isIncoming = true;
-                callStartTime = now;
-                onIncomingCallReceived(context, callStartTime);
+                onIncomingCallReceived(context);
                 Log.d(getClass().getSimpleName(), "Incoming call received");
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
                 if (lastState != TelephonyManager.CALL_STATE_RINGING) {
                     Log.d(getClass().getSimpleName(), "Outgoing call initiated");
                     isIncoming = false;
-                    callStartTime = now;
                     // test as I don't have another phone to call myself with
-                    onIncomingCallReceived(context, callStartTime);
+                    onIncomingCallReceived(context);
                 } else {
                     isIncoming = true;
-                    callStartTime = now;
-                    onIncomingCallAnswered(context, callStartTime);
+                    onIncomingCallAnswered(context);
                     Log.d(getClass().getSimpleName(), "Incoming call answered");
                 }
                 break;
@@ -70,12 +85,12 @@ public abstract class PhoneCallReceiver extends BroadcastReceiver {
                 if (lastState == TelephonyManager.CALL_STATE_RINGING) {
                     Log.d(getClass().getSimpleName(), "Missed call");
                 } else if (isIncoming) {
-                    onIncomingCallEnded(context, callStartTime, now);
+                    onIncomingCallEnded(context);
                     Log.d(getClass().getSimpleName(), "Incoming call ended");
                 } else {
                     Log.d(getClass().getSimpleName(), "Outgoing call ended");
                     // test as I don't have another phone to call myself with
-                    onIncomingCallEnded(context, callStartTime, now);
+                    onIncomingCallEnded(context);
                 }
                 break;
         }

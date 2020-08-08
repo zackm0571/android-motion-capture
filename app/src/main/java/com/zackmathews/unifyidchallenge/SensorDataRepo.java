@@ -20,6 +20,13 @@ import io.reactivex.rxjava3.internal.observers.BlockingBaseObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.Subject;
 
+/**
+ * This repo acts as the source of truth for sensor data.
+ *
+ * @see RawSensorCapture feeds sensor data and the repo determines
+ * whether or not conditions are met for that data to be written to disk.
+ * Following MVVM it would be very easy to add a ViewModel to render this data in the UI.
+ */
 public class SensorDataRepo {
     private Context context;
     private RawSensorCapture rawSensorCapture;
@@ -34,6 +41,9 @@ public class SensorDataRepo {
                 .enableRotationSensor().build();
     }
 
+    /**
+     * Starts capturing sensor data, clears the buffer of packets if it contains any.
+     */
     public void startSensorCapture() {
         Log.d(getClass().getSimpleName(), "Starting sensor capture");
         packets.clear();
@@ -54,17 +64,35 @@ public class SensorDataRepo {
         });
     }
 
+    /**
+     * Stops capturing sensor data.
+     */
     public void stopSensorCapture() {
         Log.d(getClass().getSimpleName(), "Stopping sensor capture");
         rawSensorCapture.stopCapture();
         sensorPacketObservable = null;
         boolean isSimpleCallAnswerMotion = isSimpleCallAnswerMotion();
         Log.d(getClass().getSimpleName(), String.format("isSimpleCallAnswerMotion: %b", isSimpleCallAnswerMotion));
+        if (isSimpleCallAnswerMotion) {
+            try {
+                writeSessionToDisk();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
+    /**
+     * Determines whether or not the phone started
+     * flat on a table and ended held up to the ear.
+     * Looks at packets in the first X ms and last X ms,
+     * calculates the average of the accelerometer significant axis' (Z axis for flat on table, Y for held up to ear).
+     * Note: Clears the buffer of packets.
+     *
+     * @return true if conditions were met for a simple call answer motion.
+     */
     public boolean isSimpleCallAnswerMotion() {
         if (packets != null && packets.size() > 0) {
-            //get orientation within first X ms and last x ms
             final long EVENT_WINDOW = 1000; // milliseconds
 
             final float TABLE_Z_THRESHOLD = 3.7f;
@@ -88,23 +116,21 @@ public class SensorDataRepo {
                 RawSensorCapture.SensorDataPacket hiPacket = packets.get(hi);
                 Date loTimestamp = loPacket.date;
                 Date hiTimestamp = hiPacket.date;
-                if(start.getTime() + EVENT_WINDOW > loTimestamp.getTime()){
+                if (start.getTime() + EVENT_WINDOW > loTimestamp.getTime()) {
                     startAvgAccelerometer[0] += Math.abs(loPacket.values[0]);
                     startAvgAccelerometer[1] += Math.abs(loPacket.values[1]);
                     startAvgAccelerometer[2] += Math.abs(loPacket.values[2]);
                     loCount++;
-                }
-                else{
+                } else {
                     isFinishedLo = true;
                 }
 
-                if(end.getTime() - EVENT_WINDOW < hiTimestamp.getTime()) {
+                if (end.getTime() - EVENT_WINDOW < hiTimestamp.getTime()) {
                     endAvgAccelerometer[0] += Math.abs(hiPacket.values[0]);
                     endAvgAccelerometer[1] += Math.abs(hiPacket.values[1]);
                     endAvgAccelerometer[2] += Math.abs(hiPacket.values[2]);
                     hiCount++;
-                }
-                else{
+                } else {
                     isFinishedHi = true;
                 }
                 lo++;
@@ -126,12 +152,20 @@ public class SensorDataRepo {
         return false;
     }
 
+    /**
+     * Builds a protobuf summation of sensor data + timestamps and then writes to disk.
+     *
+     * @throws IOException
+     */
     public void writeSessionToDisk() throws IOException {
         if (packets != null && packets.size() > 0) {
             List<UnifyChallengeProto.SensorData> sensorData = new ArrayList<>();
             for (RawSensorCapture.SensorDataPacket packet : packets) {
                 List<Float> values = Arrays.asList(packet.values);
-                UnifyChallengeProto.SensorData data = UnifyChallengeProto.SensorData.newBuilder().addAllSensorValues(values).setSensorType(packet.sensorType).build();
+                UnifyChallengeProto.SensorData data = UnifyChallengeProto.SensorData
+                        .newBuilder().addAllSensorValues(values)
+                        .setSensorType(packet.sensorType)
+                        .setTimestamp(packet.date.getTime()).build();
                 sensorData.add(data);
             }
             UnifyChallengeProto.SensorDataCollection collection = UnifyChallengeProto.SensorDataCollection.newBuilder().addAllSensorData(sensorData).build();
@@ -142,6 +176,7 @@ public class SensorDataRepo {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+            Log.d(getClass().getSimpleName(), String.format("Wrote session to filename: %s in directory: %s", file.getName(), file.getAbsolutePath()));
             packets.clear();
         }
     }

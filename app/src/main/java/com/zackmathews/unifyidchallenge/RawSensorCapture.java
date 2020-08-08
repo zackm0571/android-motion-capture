@@ -13,8 +13,16 @@ import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
+/**
+ * Responsible for interacting with Android hardware to report sensor data.
+ * Sensor data is encapsulated in @see {@link SensorDataPacket}
+ * To instantiate use @see {@link Builder}.
+ *
+ * @see RawSensorCapture#beginCapture() returns a @see {@link Subject} that consumers can subscribe to.
+ * Make sure you call @see {@link RawSensorCapture#stopCapture()} to release resources.
+ */
 public class RawSensorCapture implements SensorEventListener {
-    class SensorDataPacket {
+    static class SensorDataPacket {
         public String sensorType;
         public Float[] values;
         public Date date;
@@ -25,6 +33,12 @@ public class RawSensorCapture implements SensorEventListener {
     private SensorManager sensorManager;
     private HashMap<Integer, Sensor> sensorMap = new HashMap<>();
 
+    /**
+     * Registers any sensors enabled in the Builder and begins reporting sensor data.
+     * Make sure you call @see {@link RawSensorCapture#stopCapture()} to free allocated resources.
+     *
+     * @return @see {@link Subject} to subscribe to sensor data encapsulated in @see {@link SensorDataPacket}.
+     */
     public Subject<SensorDataPacket> beginCapture() {
         for (HashMap.Entry<Integer, Sensor> entry : sensorMap.entrySet()) {
             Sensor s = entry.getValue();
@@ -34,6 +48,9 @@ public class RawSensorCapture implements SensorEventListener {
         return packetObservable;
     }
 
+    /**
+     * Unregisters sensors and frees memory from the Subject observable.
+     */
     public void stopCapture() {
         sensorManager.unregisterListener(this);
         packetObservable = null;
@@ -45,7 +62,7 @@ public class RawSensorCapture implements SensorEventListener {
         packet.date = new Date(System.currentTimeMillis());
         packet.values = new Float[event.values.length];
         // Protobuf and Arrays.asList needs this to be Float vs float
-        for(int i = 0; i < event.values.length; i++){
+        for (int i = 0; i < event.values.length; i++) {
             packet.values[i] = event.values[i];
         }
         packet.sensorType = event.sensor.getName();
@@ -57,33 +74,66 @@ public class RawSensorCapture implements SensorEventListener {
 
     }
 
+    /**
+     * Builder for creating an instance of @see {@link RawSensorCapture}.
+     * A nonnull @see {@link Context} is required or else an Exception will be thrown.
+     */
     public static class Builder {
         private Context context;
         private boolean enableRotation, enableAccel, enableGyroscope;
         private HashMap<Integer, Sensor> sensorMap = new HashMap<>();
         private SensorManager sensorManager;
 
+        /**
+         * Provides the builder with a context necessary to gain access to sensor data.
+         *
+         * @param context
+         * @return
+         */
         @NonNull
         public Builder with(@NonNull Context context) {
             this.context = context;
             return this;
         }
 
+        /**
+         * Enables use of @see {@link Sensor#TYPE_ROTATION_VECTOR}
+         *
+         * @return this builder
+         */
         public Builder enableRotationSensor() {
             enableRotation = true;
             return this;
         }
 
+        /**
+         * Enables use of @see {@link Sensor#TYPE_ACCELEROMETER}
+         *
+         * @return this builder
+         */
         public Builder enableAccelerometerSensor() {
             enableAccel = true;
             return this;
         }
 
-        public Builder enableGyroscopeSensor(){
+        /**
+         * Enables use of @see {@link Sensor#TYPE_GYROSCOPE}
+         *
+         * @return this builder
+         */
+        public Builder enableGyroscopeSensor() {
             enableGyroscope = true;
             return this;
         }
 
+        /**
+         * Builds an instance of @see {@link RawSensorCapture}
+         * using the given context and flags for which sensors
+         * to enable using the given context and flags for which sensors to enable.
+         * Throws an exception if Context is invalid or cannot successfully gain access to a requested sensor.
+         *
+         * @return
+         */
         public RawSensorCapture build() {
             if (context == null)
                 throw new IllegalStateException("A valid context must be provided");
