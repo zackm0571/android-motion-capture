@@ -11,9 +11,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.internal.observers.BlockingBaseObserver;
@@ -58,6 +58,72 @@ public class SensorDataRepo {
         Log.d(getClass().getSimpleName(), "Stopping sensor capture");
         rawSensorCapture.stopCapture();
         sensorPacketObservable = null;
+        boolean isSimpleCallAnswerMotion = isSimpleCallAnswerMotion();
+        Log.d(getClass().getSimpleName(), String.format("isSimpleCallAnswerMotion: %b", isSimpleCallAnswerMotion));
+    }
+
+    public boolean isSimpleCallAnswerMotion() {
+        if (packets != null && packets.size() > 0) {
+            //get orientation within first X ms and last x ms
+            final long EVENT_WINDOW = 1000; // milliseconds
+
+            final float TABLE_Z_THRESHOLD = 3.7f;
+            final float TABLE_Z_DRIFT = .75f;
+            final float EAR_Y_THRESHOLD = 2.5f;
+            final float EAR_Y_DRIFT = .75f;
+
+            int length = packets.size();
+            Date start = packets.get(0).date;
+            Date end = (length - 1 > 0) ? packets.get(length - 1).date : null;
+            if (end == null) return false;
+
+            float[] startAvgAccelerometer = new float[3];
+            float[] endAvgAccelerometer = new float[3];
+            int lo = 1, hi = length - 1;
+            int loCount = 0, hiCount = 0;
+            boolean isFinishedLo = false;
+            boolean isFinishedHi = false;
+            while (lo < hi || (!isFinishedLo && !isFinishedHi)) {
+                RawSensorCapture.SensorDataPacket loPacket = packets.get(lo);
+                RawSensorCapture.SensorDataPacket hiPacket = packets.get(hi);
+                Date loTimestamp = loPacket.date;
+                Date hiTimestamp = hiPacket.date;
+                if(start.getTime() + EVENT_WINDOW > loTimestamp.getTime()){
+                    startAvgAccelerometer[0] += Math.abs(loPacket.values[0]);
+                    startAvgAccelerometer[1] += Math.abs(loPacket.values[1]);
+                    startAvgAccelerometer[2] += Math.abs(loPacket.values[2]);
+                    loCount++;
+                }
+                else{
+                    isFinishedLo = true;
+                }
+
+                if(end.getTime() - EVENT_WINDOW < hiTimestamp.getTime()) {
+                    endAvgAccelerometer[0] += Math.abs(hiPacket.values[0]);
+                    endAvgAccelerometer[1] += Math.abs(hiPacket.values[1]);
+                    endAvgAccelerometer[2] += Math.abs(hiPacket.values[2]);
+                    hiCount++;
+                }
+                else{
+                    isFinishedHi = true;
+                }
+                lo++;
+                hi--;
+            }
+            startAvgAccelerometer[0] /= loCount;
+            startAvgAccelerometer[1] /= loCount;
+            startAvgAccelerometer[2] /= loCount;
+
+            endAvgAccelerometer[0] /= hiCount;
+            endAvgAccelerometer[1] /= hiCount;
+            endAvgAccelerometer[2] /= hiCount;
+
+            return startAvgAccelerometer[2] > TABLE_Z_THRESHOLD - TABLE_Z_DRIFT
+                    && startAvgAccelerometer[2] < TABLE_Z_THRESHOLD + TABLE_Z_DRIFT
+                    && endAvgAccelerometer[1] > EAR_Y_THRESHOLD - EAR_Y_DRIFT
+                    && endAvgAccelerometer[1] < EAR_Y_THRESHOLD + EAR_Y_DRIFT;
+        }
+        return false;
     }
 
     public void writeSessionToDisk() throws IOException {
@@ -76,7 +142,7 @@ public class SensorDataRepo {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+            packets.clear();
         }
     }
-
 }
