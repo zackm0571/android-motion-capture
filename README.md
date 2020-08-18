@@ -1,3 +1,9 @@
+## Summary 
+Motion Mapper for Mobile
+Let's pretend you're on a software engineering team that's building a human movement recognition platform called Motion Mapper for mobile devices.  An important component of this platform detects the unique physical movements a person performs while answering a voice phone call on their mobile device.
+
+Your task is to make a usable mobile app that collects user movement data so that your Data Science team can evaluate it.  More specifically, your app should collect the sensor data from a mobile device that measures a user's movements when answering a phone call. Because there are many permutations for how a person can answer a phone call, let's keep this simple and assume that we're only interested in calls that begin with the device lying flat on a table and end with the phone being held up to to the user's ear. 
+
 ## Libraries/Patterns chosen
 - Protobuf
 	- Chosen for cross platform compatibility, small file sizes, ease of serialability, and it's really cool!
