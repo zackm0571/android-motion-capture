@@ -1,15 +1,13 @@
-# UnifyID Coding Challenge
-
-##Libraries/Patterns chosen
+## Libraries/Patterns chosen
 - Protobuf
 	- Chosen for cross platform compatibility, small file sizes, ease of serialability, and it's really cool!
 - RxJava
 - MVVM 
  
-##Build instructions
+## Build instructions
 Download dependencies, install [protobuf compiler](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4), from root project dir run `./compile_proto.sh`. Run project. 
 
-##Further Considerations
+## Further Considerations
 
 - If we wanted to collect data samples of this movement from one million unique devices running our app in the future, what would be the best way to transfer the data from those devices to our Data Science team? 
   - Compress and fragment all of the protobuf files, encrypt with AES/RSA, batch upload with auth credentials as well as more detailed information like GPS, IP, etc.
